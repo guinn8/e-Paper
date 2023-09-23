@@ -37,17 +37,17 @@ RPI_epd:${OBJ_O}
 	
 $(shell mkdir -p $(DIR_BIN))
 
+LIBARY_INC=-I $(DIR_Config) -I $(DIR_GUI) -I $(DIR_EPD) $(DEBUG)
 ${DIR_BIN}/%.o:$(DIR_Examples)/%.c
-	$(CC) $(CFLAGS) -c	$< -o $@ -I $(DIR_Config) -I $(DIR_GUI) -I $(DIR_EPD) $(DEBUG)
+	$(CC) $(CFLAGS) -c	$< -o $@ $(LIBARY_INC)
 	
 ${DIR_BIN}/%.o:$(DIR_EPD)/%.c
-	$(CC) $(CFLAGS) -c	$< -o $@ -I $(DIR_Config) $(DEBUG)
-
+	$(CC) $(CFLAGS) -c	$< -o $@ $(LIBARY_INC)
 ${DIR_BIN}/%.o:$(DIR_FONTS)/%.c 
-	$(CC) $(CFLAGS) -c	$< -o $@ $(DEBUG)
+	$(CC) $(CFLAGS) -c	$< -o $@ $(LIBARY_INC)
 	
 ${DIR_BIN}/%.o:$(DIR_GUI)/%.c
-	$(CC) $(CFLAGS) -c	$< -o $@ -I $(DIR_Config) $(DEBUG)
+	$(CC) $(CFLAGS) -c	$< -o $@ $(LIBARY_INC)
 
 RPI_DEV:
 	$(CC) $(CFLAGS) $(DEBUG_RPI) -c	 $(DIR_Config)/dev_hardware_SPI.c -o $(DIR_BIN)/dev_hardware_SPI.o $(LIB_RPI) $(DEBUG)
