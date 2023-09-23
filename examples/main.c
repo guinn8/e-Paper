@@ -1,5 +1,122 @@
 ﻿#include <signal.h>     //signal()
+#include "EPD_2in13_V3.h"
+#include <time.h> 
+#include <assert.h>  // For assert() function
+#include "DEV_Config.h"
+#include "GUI_Paint.h"
+#include "GUI_BMPfile.h"
+#include <stdlib.h>     //exit()
+#include <signal.h>     //signal()
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+// Initialize E-Paper Display (EPD)
+void initEPD() {
+    Debug("EPD_2in13_V3_test Demo\r\n");
+    if(DEV_Module_Init() != 0) {
+        exit(-1);
+    }
+    EPD_2in13_V3_Init();
+}
+
+// Measure the time required to clear the EPD
+void measureClearTime() {
+    struct timespec start = {0,0}, finish = {0,0};
+    clock_gettime(CLOCK_REALTIME, &start);
+    EPD_2in13_V3_Clear();
+    clock_gettime(CLOCK_REALTIME, &finish);
+    Debug("%ld S\r\n", finish.tv_sec - start.tv_sec);
+}
+
+// Create and configure image buffer
+UBYTE* createAndConfigImage() {
+    UWORD Imagesize = ((EPD_2in13_V3_WIDTH % 8 == 0) ? (EPD_2in13_V3_WIDTH / 8) : (EPD_2in13_V3_WIDTH / 8 + 1)) * EPD_2in13_V3_HEIGHT;
+    UBYTE *BlackImage = (UBYTE *)malloc(Imagesize);
+    if(BlackImage == NULL) {
+        Debug("Failed to apply for black memory...\r\n");
+        exit(-1);
+    }
+    Paint_NewImage(BlackImage, EPD_2in13_V3_WIDTH, EPD_2in13_V3_HEIGHT, 90, WHITE);
+    Paint_Clear(WHITE);
+    return BlackImage;
+}
+
+// Finalize EPD and free resources
+void finalizeEPD(UBYTE *BlackImage) {
+    EPD_2in13_V3_Sleep();
+    free(BlackImage);
+    DEV_Delay_ms(2000);
+    DEV_Module_Exit();
+}
+
+#define TOTAL_BOXES 7
+#define EPD_WIDTH EPD_2in13_V3_HEIGHT
+#define BOX_GAP 2
+#define BOX_SIZE ((EPD_WIDTH - (BOX_GAP * (TOTAL_BOXES - 1))) / TOTAL_BOXES)
+// Draw the title bar
+void drawTitle(const char *title) {
+    Paint_DrawRectangle(0, 0, EPD_2in13_V3_HEIGHT, 30, BLACK, 2, DRAW_FILL_FULL);
+    Paint_DrawString_EN(5, 5, title, &Font24, BLACK, WHITE);
+}
+
+
+
+typedef enum {
+    STYLE_DEFAULT,
+    STYLE_INVERTED,
+    STYLE_INVERTED_STRIKE,
+} NumberBoxStyle;
+
+typedef struct {
+    UWORD number;
+    NumberBoxStyle style;
+} NumberBox_t;
+
+void drawNumberBox(UWORD x, UWORD y, NumberBox_t *numberbox){
+    assert(numberbox->number >= 0 && numberbox->number <= 99);
+    assert((x + BOX_SIZE) <= EPD_2in13_V3_HEIGHT);
+    assert((y + BOX_SIZE) <= EPD_2in13_V3_WIDTH);
+
+    const UWORD rectXEnd = x + BOX_SIZE - 1;
+    const UWORD rectYEnd = y + BOX_SIZE - 1;
+    const int num_digits = (numberbox->number > 9) ? 2 : 1;
+    const int totalTextWidth = num_digits * 17;
+    const int totalTextHeight = 22;
+    UWORD textX = (x + (BOX_SIZE - totalTextWidth) / 2);
+    const UWORD textY = y + (BOX_SIZE - totalTextHeight) / 2;
+
+    int foreground, background, fill, fill_colour, stroke_width;
+    switch(numberbox->style) {
+        case STYLE_INVERTED_STRIKE:
+            Paint_DrawLine(x, y, rectXEnd, rectYEnd, BLACK, 2, LINE_STYLE_SOLID);
+        case STYLE_INVERTED:
+            foreground = BLACK;
+            background = WHITE;
+            fill = DRAW_FILL_EMPTY;
+            fill_colour = foreground;
+            stroke_width = 2;
+            break;
+        default:  // STYLE_DEFAULT
+            foreground = WHITE;
+            background = BLACK;
+            fill = DRAW_FILL_FULL;
+            fill_colour = background;
+            stroke_width = 1;
+            y += 1;
+            textX -= 1;
+    }
+
+    Paint_DrawRectangle(x, y, rectXEnd, rectYEnd, fill_colour, stroke_width, fill);
+    Paint_DrawNum(textX, textY, numberbox->number, &Font24, foreground, background);
+}
+
+void drawNumberBoxes(UBYTE *BlackImage, NumberBox_t numbers[], int numBoxes, const UWORD yOffset) {
+    assert(numBoxes <= TOTAL_BOXES);
+    for (UWORD x = 0, i = 0; i < numBoxes; ++i) {
+        drawNumberBox(x, yOffset, &numbers[i]);
+        x += (BOX_SIZE + BOX_GAP);
+    }
+}
 
 void  Handler(int signo)
 {
@@ -14,182 +131,28 @@ int main(void)
 {
     // Exception handling:ctrl + c
     signal(SIGINT, Handler);
-    
-#ifdef epd1in64g
-    EPD_1in64g_test();
-    
-#elif epd2in36g
-    EPD_2in36g_test();
-    
-#elif epd3in0g
-    EPD_3in0g_test();
-    
-#elif epd4in37g
-    EPD_4in37g_test();
-    
-#elif epd7in3g
-    EPD_7in3g_test();
-    
-#elif epd1in54des
-    EPD_1in54_DES_test();
-    
-#elif epd2in13des
-    EPD_2in13_DES_test();
-    
-#elif epd2in9des
-    EPD_2in9_DES_test();
-    
-#elif epd1in02d
-    EPD_1in02d_test();
-    
-#elif epd1in54
-    EPD_1in54_test();
-    
-#elif epd1in54V2
-    EPD_1in54_V2_test();
-    
-#elif epd1in54b
-    EPD_1in54b_test();
-    
-#elif epd1in54bV2
-    EPD_1in54b_V2_test();
-    
-#elif epd1in54c
-    EPD_1in54c_test();
-    
-#elif epd2in66
-    EPD_2in66_test();
-    
-#elif epd2in66b
-    EPD_2in66b_test();
-    
-#elif epd2in7
-    EPD_2in7_test();
-    
-#elif epd2in7V2
-    EPD_2in7_V2_test();
-    
-#elif epd2in7b
-    EPD_2in7b_test();
-    
-#elif epd2in7bV2
-    EPD_2in7b_V2_test();
-    
-#elif epd2in9
-    EPD_2in9_test();
-    
-#elif epd2in9V2
-    EPD_2in9_V2_test();
-    
-#elif epd2in9bc
-    EPD_2in9bc_test();
-    
-#elif epd2in9bV3
-    EPD_2in9b_V3_test();
-    
-#elif epd2in9d
-    EPD_2in9d_test();
-    
-#elif epd2in13
-    EPD_2in13_test();
-    
-#elif epd2in13V2
-    EPD_2in13_V2_test();
-    
-#elif epd2in13V3
-    EPD_2in13_V3_test();
+    initEPD();
+    measureClearTime();
+    UBYTE *BlackImage = createAndConfigImage();
+    drawTitle("Oboz Bridger");
 
-#elif epd2in13V4
-    EPD_2in13_V4_test();
-    
-#elif epd2in13bc
-    EPD_2in13bc_test();
-    
-#elif epd2in13bV3
-    EPD_2in13b_V3_test();
-    
-#elif epd2in13bV4
-    EPD_2in13b_V4_test();
-    
-#elif epd2in13d
-    EPD_2in13d_test();
+    NumberBox_t sizes[] = {
+        {.style = STYLE_DEFAULT, .number = 8},
+        {.style = STYLE_INVERTED, .number = 9},
+        {.style = STYLE_INVERTED_STRIKE, .number = 10},
+        {.style = STYLE_DEFAULT, .number = 11},
+        {.style = STYLE_DEFAULT, .number = 12},
+        {.style = STYLE_DEFAULT, .number = 13},
+        {.style = STYLE_INVERTED_STRIKE, .number = 14},
+    };
 
-#elif epd2in13g
-    EPD_2in13g_test();
-    
-#elif epd3in52
-    EPD_3in52_test();
-    
-#elif epd3in7
-    EPD_3in7_test();
-    
-#elif epd4in01f
-    EPD_4in01f_test();
-    
-#elif epd4in2
-    EPD_4in2_test();
-    
-#elif epd4in2V2
-    EPD_4in2_V2_test();
-    
-#elif epd4in2bc
-    EPD_4in2bc_test();
-    
-#elif epd4in2bV2
-    EPD_4in2b_V2_test();
-    
-#elif epd4in37b
-    EPD_4in37b_test();
-    
-#elif epd5in65f
-    EPD_5in65f_test();
-    
-#elif epd5in83
-    EPD_5in83_test();
-    
-#elif epd5in83V2
-    EPD_5in83_V2_test();
-    
-#elif epd5in83bc
-    EPD_5in83bc_test();
-    
-#elif epd5in83bV2
-    EPD_5in83b_V2_test();
-    
-#elif epd5in84
-    EPD_5in84_test();
-    
-#elif epd7in3f
-    EPD_7in3f_test();
+    int numBoxes = ARRAY_SIZE(sizes);  // Using the macro here
+    Paint_DrawString_EN(5, 35, "$260.00", &Font24, WHITE, BLACK);
+    Paint_DrawString_EN(5, 60, "Best seller!", &Font24, WHITE, BLACK);
 
-#elif epd7in5
-    EPD_7in5_test();
-    
-#elif epd7in5V2
-    EPD_7in5_V2_test();
-    
-#elif epd7in5bc
-    EPD_7in5bc_test();
-    
-#elif epd7in5bV2
-    EPD_7in5b_V2_test();
-    
-#elif epd7in5HD
-    EPD_7in5_HD_test();
-    
-#elif epd7in5bHD
-    EPD_7in5b_HD_test();
-    
-#elif epd10in2b
-    EPD_10in2b_test();
-    
-#elif epd13in3
-    EPD_13in3_test();
-#else
-    printf("Please specify the EPD model when making. \r\n");
-    printf("Example: When you run the EPD_7in5_V2_test() program, input: sudo make clean && make EPD=epd7in5V2 \r\n");
-    printf("Don't know which program you need to run? Refer to the user manual (Wiki) and main.c \r\n");
-#endif
-    
+    drawNumberBoxes(BlackImage, sizes, numBoxes, 88);
+    EPD_2in13_V3_Display_Base(BlackImage);
+    finalizeEPD(BlackImage);
+
     return 0;
 }
