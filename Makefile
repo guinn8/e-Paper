@@ -34,10 +34,9 @@ endef
 DIRECTORIES = $(DIR_FONTS) $(DIR_GUI) $(DIR_Examples) $(DIR_EPD)
 $(foreach dir,$(DIRECTORIES),$(eval $(call compile_template,$(dir))))
 
+RPI_DEV_FILES = dev_hardware_SPI RPI_sysfs_gpio DEV_Config
 RPI_DEV:
-	$(CC) $(CFLAGS) $(DEBUG_RPI) -c	 $(DIR_Config)/dev_hardware_SPI.c -o $(DIR_BIN)/dev_hardware_SPI.o $(LIB_RPI) $(DEBUG)
-	$(CC) $(CFLAGS) $(DEBUG_RPI) -c	 $(DIR_Config)/RPI_sysfs_gpio.c -o $(DIR_BIN)/RPI_sysfs_gpio.o $(LIB_RPI) $(DEBUG)
-	$(CC) $(CFLAGS) $(DEBUG_RPI) -c	 $(DIR_Config)/DEV_Config.c -o $(DIR_BIN)/DEV_Config.o $(LIB_RPI) $(DEBUG)
+	$(foreach file,$(RPI_DEV_FILES),$(CC) $(CFLAGS) $(DEBUG_RPI) -c $(DIR_Config)/$(file).c -o $(DIR_BIN)/$(file).o $(LIB_RPI) $(DEBUG);)
 	
 clean :
 	rm -rf $(DIR_BIN)/*.* 
