@@ -16,12 +16,12 @@ DEBUG = -D DEBUG -D USE_BCM2835_LIB -D RPI
 
 $(shell mkdir -p $(DIR_BIN))
 
-.PHONY : RPI clean
-RPI:RPI_DEV RPI_epd 
+.PHONY: RPI clean
+RPI: RPI_DEV RPI_epd 
 
-RPI_DEV_C = $(wildcard $(DIR_BIN)/dev_hardware_SPI.o $(DIR_BIN)/RPI_sysfs_gpio.o $(DIR_BIN)/DEV_Config.o )
+RPI_DEV_C = $(DIR_BIN)/dev_hardware_SPI.o $(DIR_BIN)/RPI_sysfs_gpio.o $(DIR_BIN)/DEV_Config.o
 LIB_RPI=-Wl,--gc-sections -lbcm2835 -lm 
-RPI_epd:${OBJ_O}
+RPI_epd: ${OBJ_O}
 	echo $(@)
 	$(CC) $(CFLAGS) -D RPI $(OBJ_O) $(RPI_DEV_C) -o $(TARGET) $(LIB_RPI) $(DEBUG)
 	
