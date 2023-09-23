@@ -18,12 +18,6 @@ $(shell mkdir -p $(DIR_BIN))
 
 .PHONY: RPI clean
 RPI: RPI_DEV RPI_epd 
-
-RPI_DEV_C = $(DIR_BIN)/dev_hardware_SPI.o $(DIR_BIN)/RPI_sysfs_gpio.o $(DIR_BIN)/DEV_Config.o
-LIB_RPI=-Wl,--gc-sections -lbcm2835 -lm 
-RPI_epd: ${OBJ_O}
-	echo $(@)
-	$(CC) $(CFLAGS) -D RPI $(OBJ_O) $(RPI_DEV_C) -o $(TARGET) $(LIB_RPI) $(DEBUG)
 	
 LIB_INC = -I $(DIR_Config) -I $(DIR_GUI) -I $(DIR_EPD) $(DEBUG)
 define compile_template
@@ -32,12 +26,21 @@ ${DIR_BIN}/%.o:$(1)/%.c
 endef
 
 DIRECTORIES = $(DIR_FONTS) $(DIR_GUI) $(DIR_Examples) $(DIR_EPD)
-$(foreach dir,$(DIRECTORIES),$(eval $(call compile_template,$(dir))))
+$(foreach dir,$(DIRECTORIES), \
+	$(eval $(call compile_template,$(dir))))
 
+LIB_RPI=-Wl,--gc-sections -lbcm2835 -lm 
 RPI_DEV_FILES = dev_hardware_SPI RPI_sysfs_gpio DEV_Config
+RPI_DEV_C = $(patsubst %,$(DIR_BIN)/%.o,$(RPI_DEV_FILES))
+
+RPI_epd: ${OBJ_O}
+	echo $(@)
+	$(CC) $(CFLAGS) -D RPI $(OBJ_O) $(RPI_DEV_C) -o $(TARGET) $(LIB_RPI) $(DEBUG)
+
 RPI_DEV:
-	$(foreach file,$(RPI_DEV_FILES),$(CC) $(CFLAGS) $(DEBUG_RPI) -c $(DIR_Config)/$(file).c -o $(DIR_BIN)/$(file).o $(LIB_RPI) $(DEBUG);)
-	
+	$(foreach file,$(RPI_DEV_FILES), \
+		$(CC) $(CFLAGS) $(DEBUG_RPI) -c $(DIR_Config)/$(file).c -o $(DIR_BIN)/$(file).o $(LIB_RPI) $(DEBUG);)
+
 clean :
 	rm -rf $(DIR_BIN)/*.* 
 	rm -rf $(TARGET) 
