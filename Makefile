@@ -6,7 +6,7 @@ DIR_Examples = ./examples
 DIR_BIN		 = ./bin
 
 OBJ_C_EPD = ${DIR_EPD}/EPD_2in13_V3.c
-OBJ_C_Examples = ${DIR_Examples}/EPD_2in13_V3_test.c
+OBJ_C_Examples = ${DIR_Examples}/number_box.c
 
 
 OBJ_C = $(wildcard ${OBJ_C_EPD} ${DIR_GUI}/*.c ${OBJ_C_Examples} ${DIR_Examples}/main.c ${DIR_Examples}/ImageData2.c ${DIR_Examples}/ImageData.c ${DIR_FONTS}/*.c )
