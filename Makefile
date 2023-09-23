@@ -1,52 +1,63 @@
-CC = gcc
-TARGET = epd
+#
+# e-paper makefile
+# Author: gavinguinn1@gmail.com
+#
 
-DIR_Config	 = ./lib/Config
-DIR_EPD		 = ./lib/e-Paper
-DIR_FONTS	 = ./lib/Fonts
-DIR_GUI		 = ./lib/GUI
-DIR_Examples = ./examples
-DIR_BIN		 = ./bin
+CC      = gcc
+TARGET  = epd
 
-OBJ_C = $(wildcard ${DIR_EPD}/EPD_2in13_V3.c ${DIR_GUI}/*.c ${DIR_Examples}/*.c )
-OBJ_O = $(patsubst %.c,${DIR_BIN}/%.o,$(notdir ${OBJ_C}))
+CONFIG_DIR   = ./lib/Config
+EPD_DIR      = ./lib/e-Paper
+FONTS_DIR    = ./lib/Fonts
+GUI_DIR      = ./lib/GUI
+EXAMPLES_DIR = ./examples
+BIN_DIR      = ./bin
 
-CFLAGS += -g -O -ffunction-sections -fdata-sections -Wall -D $(EPD)
-DEBUG = -D DEBUG -D USE_BCM2835_LIB -D RPI
+SRC_FILES = $(wildcard $(EPD_DIR)/EPD_2in13_V3.c \
+            $(GUI_DIR)/*.c \
+            $(CONFIG_DIR)/dev_hardware_SPI.c \
+            $(CONFIG_DIR)/DEV_Config.c \
+            $(CONFIG_DIR)/RPI_sysfs_gpio.c \
+            $(EXAMPLES_DIR)/*.c)
 
-$(shell mkdir -p $(DIR_BIN))
+OBJ_FILES = $(patsubst %.c, $(BIN_DIR)/%.o, $(notdir $(SRC_FILES)))
 
-	
-LIB_INC = -I $(DIR_Config) -I $(DIR_GUI) -I $(DIR_EPD) $(DEBUG)
+# Libraries and Flags
+CFLAGS += -g -O -ffunction-sections -fdata-sections 
+CFLAGS += -D DEBUG -D USE_BCM2835_LIB -D RPI
 
-$(DIR_BIN)/%.o: $(DIR_FONTS)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@ $(LIB_INC)
+# Create bin directory if it doesn't exist
+$(shell mkdir -p $(BIN_DIR))
 
-$(DIR_BIN)/%.o: $(DIR_GUI)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@ $(LIB_INC)
+LIB_INC = -I $(CONFIG_DIR) -I $(GUI_DIR) -I $(EPD_DIR) $(DEBUG)
 
-$(DIR_BIN)/%.o: $(DIR_Examples)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@ $(LIB_INC)
+# compile all the fonts
+$(BIN_DIR)/%.o: $(FONTS_DIR)/%.c
+	$(CC) $(CFLAGS) -w -c $< -o $@ 
 
-# Pattern rule for generating object files for DIR_EPD
-$(DIR_BIN)/%.o: $(DIR_EPD)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@ $(LIB_INC)
+# compile the graphics library
+$(BIN_DIR)/%.o: $(GUI_DIR)/%.c
+	$(CC) $(CFLAGS) -w -c $< -o $@ -I $(CONFIG_DIR)
 
-$(DIR_BIN)/%.o: $(DIR_Config)/%.c
-	$(CC) $(CFLAGS) $(DEBUG_RPI) -c $< -o $@ $(LIB_RPI) $(DEBUG)
+# compile the screen drivers
+$(BIN_DIR)/%.o: $(EPD_DIR)/%.c
+	$(CC) $(CFLAGS) -w -c $< -o $@ -I $(CONFIG_DIR)
 
+# compile the raspberry pi config
+$(BIN_DIR)/%.o: $(CONFIG_DIR)/%.c
+	$(CC) $(CFLAGS) -w -c $< -o $@ 
 
-LIB_RPI=-Wl,--gc-sections -lbcm2835 -lm 
-RPI_DEV_FILES = dev_hardware_SPI RPI_sysfs_gpio DEV_Config
-RPI_DEV_C = $(patsubst %,$(DIR_BIN)/%.o,$(RPI_DEV_FILES))
+# compile our src files
+$(BIN_DIR)/%.o: $(EXAMPLES_DIR)/%.c
+	$(CC) $(CFLAGS) -Wall -c $< -o $@ $(LIB_INC)
 
-epd: ${OBJ_O} $(RPI_DEV_C)
-	$(CC) $(CFLAGS) -D RPI $(OBJ_O) $(RPI_DEV_C) -o $(TARGET) $(LIB_RPI) $(DEBUG)
+# Link the .o's together
+LINKER_FLAGS  = -Wl,--gc-sections -lbcm2835 -lm
+epd: $(OBJ_FILES)
+	$(CC) $(CFLAGS) -D RPI $(OBJ_FILES) -o $(TARGET) $(LINKER_FLAGS)
 
+.PHONY: clean
 
-clean :
-	rm -rf $(DIR_BIN)/*.* 
-	rm -rf $(TARGET) 
-
-.PHONY: RPI clean
-.DEFAULT: epd
+clean:
+	rm -rf $(BIN_DIR)/*.*
+	rm -rf $(TARGET)
