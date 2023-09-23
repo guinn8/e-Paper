@@ -84,7 +84,7 @@ void drawNumberBoxes(UBYTE *BlackImage, NumberBox_t numbers[], int numBoxes, con
 }
 
 
-int number_box_main(UBYTE *BlackImage) {
+void number_box_main(UBYTE *BlackImage) {
 
     drawTitle("Oboz Bridger");
 

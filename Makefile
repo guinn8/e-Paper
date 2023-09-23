@@ -15,6 +15,7 @@ BIN_DIR      = ./bin
 
 SRC_FILES = $(wildcard $(EPD_DIR)/EPD_2in13_V3.c \
             $(GUI_DIR)/*.c \
+            $(FONTS_DIR)/*.c \
             $(CONFIG_DIR)/dev_hardware_SPI.c \
             $(CONFIG_DIR)/DEV_Config.c \
             $(CONFIG_DIR)/RPI_sysfs_gpio.c \
@@ -48,7 +49,7 @@ $(BIN_DIR)/%.o: $(CONFIG_DIR)/%.c
 
 # compile our src files
 $(BIN_DIR)/%.o: $(EXAMPLES_DIR)/%.c
-	$(CC) $(CFLAGS) -Wall -c $< -o $@ -I $(CONFIG_DIR) -I $(GUI_DIR) -I $(EPD_DIR)
+	$(CC) $(CFLAGS) -Wall -Werror -c $< -o $@ -I $(CONFIG_DIR) -I $(GUI_DIR) -I $(EPD_DIR) -I $(FONTS_DIR)
 
 # Link the .o's together
 LINKER_FLAGS  = -Wl,--gc-sections -lbcm2835 -lm

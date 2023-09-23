@@ -55,7 +55,7 @@ void measureClearTime() {
     Debug("%ld S\r\n", finish.tv_sec - start.tv_sec);
 }
 
-
+extern void number_box_main(UBYTE *BlackImage); // todo
 int main(void)
 {
     signal(SIGINT, Handler); // Exception handling:ctrl + c
@@ -64,7 +64,7 @@ int main(void)
     measureClearTime();
     UBYTE *BlackImage = createAndConfigImage();
 
-    // number_box_main(BlackImage);
+    number_box_main(BlackImage);
     
     EPD_2in13_V3_Display_Base(BlackImage);
     finalizeEPD(BlackImage);
