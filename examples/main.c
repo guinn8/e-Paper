@@ -58,16 +58,15 @@ void measureClearTime() {
 
 int main(void)
 {
-    // Exception handling:ctrl + c
-    signal(SIGINT, Handler);
+    signal(SIGINT, Handler); // Exception handling:ctrl + c
     
     initEPD();
     measureClearTime();
     UBYTE *BlackImage = createAndConfigImage();
 
-    number_box_main(BlackImage);
+    // number_box_main(BlackImage);
+    
     EPD_2in13_V3_Display_Base(BlackImage);
     finalizeEPD(BlackImage);
-
     return 0;
 }
