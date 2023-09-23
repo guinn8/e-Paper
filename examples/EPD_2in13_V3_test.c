@@ -27,10 +27,14 @@
 # THE SOFTWARE.
 #
 ******************************************************************************/
-#include "EPD_Test.h"
 #include "EPD_2in13_V3.h"
 #include <time.h> 
 #include <assert.h>  // For assert() function
+#include "DEV_Config.h"
+#include "GUI_Paint.h"
+#include "GUI_BMPfile.h"
+#include <stdlib.h>     //exit()
+#include <signal.h>     //signal()
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
