@@ -18,14 +18,20 @@ $(shell mkdir -p $(DIR_BIN))
 
 	
 LIB_INC = -I $(DIR_Config) -I $(DIR_GUI) -I $(DIR_EPD) $(DEBUG)
-define compile_template
-${DIR_BIN}/%.o:$(1)/%.c
-	$$(CC) $$(CFLAGS) -c $$< -o $$@ $$(LIB_INC)
-endef
 
-DIRECTORIES = $(DIR_FONTS) $(DIR_GUI) $(DIR_Examples) $(DIR_EPD)
-$(foreach dir,$(DIRECTORIES), \
-	$(eval $(call compile_template,$(dir))))
+$(DIR_BIN)/%.o: $(DIR_FONTS)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIB_INC)
+
+$(DIR_BIN)/%.o: $(DIR_GUI)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIB_INC)
+
+$(DIR_BIN)/%.o: $(DIR_Examples)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIB_INC)
+
+# Pattern rule for generating object files for DIR_EPD
+$(DIR_BIN)/%.o: $(DIR_EPD)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@ $(LIB_INC)
+
 
 LIB_RPI=-Wl,--gc-sections -lbcm2835 -lm 
 RPI_DEV_FILES = dev_hardware_SPI RPI_sysfs_gpio DEV_Config
