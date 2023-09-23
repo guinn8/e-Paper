@@ -118,10 +118,8 @@ void drawNumberBoxes(UBYTE *BlackImage, NumberBox_t numbers[], int numBoxes, con
 }
 
 
-int number_box_main(void) {
-        initEPD();
-    measureClearTime();
-    UBYTE *BlackImage = createAndConfigImage();
+int number_box_main(UBYTE *BlackImage) {
+
     drawTitle("Oboz Bridger");
 
     NumberBox_t sizes[] = {
@@ -139,6 +137,5 @@ int number_box_main(void) {
     Paint_DrawString_EN(5, 60, "Best seller!", &Font24, WHITE, BLACK);
 
     drawNumberBoxes(BlackImage, sizes, numBoxes, 88);
-    EPD_2in13_V3_Display_Base(BlackImage);
-    finalizeEPD(BlackImage);
+
 }
