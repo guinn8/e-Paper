@@ -16,8 +16,6 @@ DEBUG = -D DEBUG -D USE_BCM2835_LIB -D RPI
 
 $(shell mkdir -p $(DIR_BIN))
 
-.PHONY: RPI clean
-RPI:  RPI_epd 
 	
 LIB_INC = -I $(DIR_Config) -I $(DIR_GUI) -I $(DIR_EPD) $(DEBUG)
 define compile_template
@@ -33,14 +31,15 @@ LIB_RPI=-Wl,--gc-sections -lbcm2835 -lm
 RPI_DEV_FILES = dev_hardware_SPI RPI_sysfs_gpio DEV_Config
 RPI_DEV_C = $(patsubst %,$(DIR_BIN)/%.o,$(RPI_DEV_FILES))
 
-RPI_epd: ${OBJ_O}
+epd: ${OBJ_O}
 	$(foreach file,$(RPI_DEV_FILES), \
 		$(CC) $(CFLAGS) $(DEBUG_RPI) -c $(DIR_Config)/$(file).c -o $(DIR_BIN)/$(file).o $(LIB_RPI) $(DEBUG);)
 	
 	$(CC) $(CFLAGS) -D RPI $(OBJ_O) $(RPI_DEV_C) -o $(TARGET) $(LIB_RPI) $(DEBUG)
 
-	
-
 clean :
 	rm -rf $(DIR_BIN)/*.* 
 	rm -rf $(TARGET) 
+
+.PHONY: RPI clean
+.DEFAULT: epd
